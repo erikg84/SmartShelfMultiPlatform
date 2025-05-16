@@ -62,6 +62,7 @@ kotlin {
             implementation(libs.androidx.activity.compose)
             implementation(libs.ktor.client.android)
             implementation(libs.sqldelight.android)
+            implementation(libs.androidx.material)
         }
 
         iosMain.dependencies {
@@ -84,9 +85,6 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
-            implementation(libs.androidx.material)
-            implementation("androidx.compose.material:material-icons-core:1.7.8")
-            implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
             // Kotlin libraries
             implementation(libs.kotlinx.coroutines.core)
