@@ -85,26 +85,14 @@ kotlin {
             implementation(libs.koin.core)
             implementation(libs.koin.compose)
             implementation(libs.koin.compose.viewmodel)
-
-            // Kotlin libraries
             implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.kotlinx.datetime)
-
-            // Networking
             implementation(libs.bundles.ktor)
-
-            // Database
             implementation(libs.bundles.sqldelight)
-
-            // Local Storage
             implementation(libs.multiplatform.settings)
             implementation(libs.multiplatform.settings.coroutines)
-
-            // Navigation
             implementation(libs.bundles.voyager)
-
-            // Utilities
             implementation(libs.napier)
             implementation(libs.kamel)
         }
