@@ -42,6 +42,11 @@ kotlin {
             implementation(libs.androidx.material)
             implementation(project.dependencies.platform(libs.firebase.bom))
             implementation(libs.firebase.auth.android)
+            implementation(libs.mlkit.barcode)
+            implementation(libs.camerax.core)
+            implementation(libs.camerax.camera2)
+            implementation(libs.camerax.lifecycle)
+            implementation(libs.camerax.view)
         }
 
         iosMain.dependencies {
@@ -76,12 +81,22 @@ kotlin {
             implementation(libs.kamel)
             implementation(libs.firebase.common)
             implementation(libs.firebase.auth)
+            implementation(libs.firebase.firestore)
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
         }
+
+        all {
+            languageSettings.optIn("kotlin.RequiresOptIn")
+            languageSettings.enableLanguageFeature("ExpectActualClasses")
+        }
     }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions.freeCompilerArgs.add("-Xexpect-actual-classes")
 }
 
 android {
