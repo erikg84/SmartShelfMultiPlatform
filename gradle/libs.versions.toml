@@ -10,6 +10,8 @@ composeHotReload = "1.0.0-alpha09"
 composeMultiplatform = "1.8.0"
 navigation = "2.7.0-alpha07"
 viewmodel = "2.8.0"
+firebase-bom = "32.7.2"
+firebase-auth = "1.9.0"
 koin = "3.5.6"
 koinCompose = "1.1.5"
 koinComposeViewModel = "1.2.0-Beta4"
@@ -63,6 +65,10 @@ voyager-tab-navigator = { module = "cafe.adriel.voyager:voyager-tab-navigator", 
 voyager-bottomsheet-navigator = { module = "cafe.adriel.voyager:voyager-bottom-sheet-navigator", version.ref = "voyager" }
 napier = { module = "io.github.aakira:napier", version.ref = "napier" }
 kamel = { module = "media.kamel:kamel-image", version.ref = "kamel" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
+firebase-auth-android = { module = "com.google.firebase:firebase-auth-ktx" }
+firebase-auth = { module = "dev.gitlive:firebase-auth", version.ref = "firebase-auth" }
+firebase-common = { module = "dev.gitlive:firebase-common", version.ref = "firebase-auth" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
@@ -73,6 +79,7 @@ composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "k
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
+google-services = { id = "com.google.gms.google-services", version = "4.4.2" }
 
 [bundles]
 ktor = [

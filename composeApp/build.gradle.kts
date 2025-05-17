@@ -1,8 +1,6 @@
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
-import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
@@ -12,6 +10,7 @@ plugins {
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.sqldelight)
+    alias(libs.plugins.google.services)
 }
 
 kotlin {
@@ -33,29 +32,7 @@ kotlin {
         }
     }
 
-    jvm("desktop")
-
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        moduleName = "composeApp"
-        browser {
-            val rootDirPath = project.rootDir.path
-            val projectDirPath = project.projectDir.path
-            commonWebpackConfig {
-                outputFileName = "composeApp.js"
-                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        add(rootDirPath)
-                        add(projectDirPath)
-                    }
-                }
-            }
-        }
-        binaries.executable()
-    }
-
     sourceSets {
-        val desktopMain by getting
 
         androidMain.dependencies {
             implementation(compose.preview)
@@ -63,6 +40,8 @@ kotlin {
             implementation(libs.ktor.client.android)
             implementation(libs.sqldelight.android)
             implementation(libs.androidx.material)
+            implementation(project.dependencies.platform(libs.firebase.bom))
+            implementation(libs.firebase.auth.android)
         }
 
         iosMain.dependencies {
@@ -95,21 +74,12 @@ kotlin {
             implementation(libs.bundles.voyager)
             implementation(libs.napier)
             implementation(libs.kamel)
+            implementation(libs.firebase.common)
+            implementation(libs.firebase.auth)
         }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
-        }
-
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
-            implementation(libs.kotlinx.coroutinesSwing)
-            implementation(libs.ktor.client.java)
-            implementation(libs.sqldelight.sqlite)
-        }
-
-        wasmJsMain.dependencies {
-            implementation(libs.ktor.client.js)
         }
     }
 }
@@ -117,9 +87,9 @@ kotlin {
 android {
     namespace = "org.dallas.smartshelf"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
-
+    apply(plugin = libs.plugins.google.services.get().pluginId)
     defaultConfig {
-        applicationId = "org.dallas.smartshelf"
+        applicationId = "com.junevrtech.smartshelf"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "441163649221",
+    "project_id": "smartshelf-a67f5",
+    "storage_bucket": "smartshelf-a67f5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:441163649221:android:07b05a5fa88ec71a3ea0ac",
+        "android_client_info": {
+          "package_name": "com.junevrtech.smartshelf"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDo0UzgqUkKPCBGFv1yENPXGLxuBTHpEBI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
