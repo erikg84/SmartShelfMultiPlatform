@@ -110,7 +110,7 @@ class AndroidOCRScanner(
                 .build()
 
             // Create and set the OCR analyzer (this would be your existing OCRAnalyzer)
-            val analyzer = OCRAnalyzer(onTextDetected, onError)
+            val analyzer = AndroidOCRAnalyzer(onTextDetected, onError)
             imageAnalysis?.setAnalyzer(
                 ContextCompat.getMainExecutor(context),
                 analyzer

@@ -10,13 +10,11 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.dallas.smartshelf.manager.SharedPreferencesManager
-import org.dallas.smartshelf.manager.UserManager
 import org.dallas.smartshelf.repository.AuthenticationRepository
 import org.dallas.smartshelf.util.ConsumableEvent
 
 class SignupViewModel(
     private val navigator: Navigator,
-    private val userManager: UserManager,
     private val authRepository: AuthenticationRepository,
     private val sharedPreferencesManager: SharedPreferencesManager
 ) : ScreenModel {
@@ -69,8 +67,6 @@ class SignupViewModel(
         screenModelScope.launch {
             authRepository.register(username, email, password)
                 .onSuccess { user ->
-                    // Update user profile
-                    userManager.updateUserProfile(user.userId, mapOf("email" to email))
 
                     statefulStore.process { oldState ->
                         oldState.copy(

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -31,9 +32,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.junevrtech.smartshelf.model.Product
-import com.junevrtech.smartshelf.model.ProductCategory
-import com.junevrtech.smartshelf.model.ProductSortOption
+import org.dallas.smartshelf.model.Product
+import org.dallas.smartshelf.model.ProductCategory
+import org.dallas.smartshelf.model.ProductSortOption
 import org.dallas.smartshelf.view.component.InputFieldComponent
 import org.dallas.smartshelf.view.component.LoadingComponent
 import org.dallas.smartshelf.view.component.Spacer16
@@ -41,8 +42,8 @@ import org.dallas.smartshelf.view.component.Spacer4
 import org.dallas.smartshelf.view.component.Spacer8
 import org.dallas.smartshelf.view.component.dialog.ErrorDialogComponent
 import org.dallas.smartshelf.theme.dimens
+import org.dallas.smartshelf.util.formatToIsoDate
 import org.dallas.smartshelf.viewmodel.StockViewModel
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun StockScreen(
@@ -222,7 +223,7 @@ fun ProductItem(
                     }
 
                     Text(
-                        text = "Expires: ${expiryDate.format(DateTimeFormatter.ISO_LOCAL_DATE)}",
+                        text = "Expires: ${expiryDate.formatToIsoDate()}",
                         style = MaterialTheme.typography.bodySmall,
                         color = textColor
                     )

@@ -1,6 +1,7 @@
 package org.dallas.smartshelf.model
 
 import kotlinx.datetime.LocalDate
+import org.dallas.smartshelf.util.parseToLocalDateTime
 
 fun EggNutritionResponse.toEggNutrition(): EggNutrition {
     return EggNutrition(
@@ -29,7 +30,7 @@ fun EggPriceResponse.EggPriceData.toEggPrice(): EggPrice {
     return EggPrice(
         eggType = eggType,
         price = price,
-        date = LocalDate.parse(date),
+        date =parseToLocalDateTime(date),
         source = source
     )
 }
@@ -41,6 +42,6 @@ fun EggPriceResponse.toEggPriceHistory(): EggPriceHistory {
         lowestPrice = lowestPrice,
         highestPrice = highestPrice,
         priceChange30Days = priceChange30Days,
-        lastUpdated = LocalDate.parse(lastUpdated)
+        lastUpdated = parseToLocalDateTime(lastUpdated)
     )
 }

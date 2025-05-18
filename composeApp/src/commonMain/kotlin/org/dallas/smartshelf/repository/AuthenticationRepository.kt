@@ -76,4 +76,8 @@ class AuthenticationRepository(
     suspend fun getCurrentUser(): User? {
         return jwtAuthManager.getCurrentUser()
     }
+
+    fun getAccessToken(): String? {
+        return jwtAuthManager.getAccessToken()
+    }
 }

@@ -1,4 +1,4 @@
-package com.junevrtech.smartshelf.view.screen
+package org.dallas.smartshelf.view.screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -7,11 +7,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.tooling.preview.Preview
-import com.junevrtech.smartshelf.theme.SmartShelfTheme
-import com.junevrtech.smartshelf.theme.dimens
-import com.junevrtech.smartshelf.viewmodel.SettingsViewModel
+import org.dallas.smartshelf.theme.dimens
+import org.dallas.smartshelf.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
@@ -129,17 +126,6 @@ private fun LanguageToggleItem(
             colors = SwitchDefaults.colors(
                 checkedThumbColor = MaterialTheme.colorScheme.onTertiary
             )
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun SettingsScreenPreview() {
-    SmartShelfTheme {
-        SettingsScreen(
-            viewState = SettingsViewModel.ViewState(),
-            onAction = {}
         )
     }
 }

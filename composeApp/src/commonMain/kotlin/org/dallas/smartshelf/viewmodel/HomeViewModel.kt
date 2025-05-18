@@ -8,8 +8,8 @@ import com.junevrtech.smartshelf.store.StatefulStore
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.dallas.smartshelf.util.ConsumableEvent
-import org.dallas.smartshelf.view.screen.BarcodeScanScreen
-import org.dallas.smartshelf.view.screen.ReceiptScanScreen
+import org.dallas.smartshelf.view.screen.model.BarcodeScanScreen
+import org.dallas.smartshelf.view.screen.model.ReceiptScanScreen
 
 class HomeViewModel(
     private val navigator: Navigator

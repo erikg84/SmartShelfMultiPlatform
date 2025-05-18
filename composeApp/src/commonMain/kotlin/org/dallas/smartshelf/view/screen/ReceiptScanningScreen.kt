@@ -1,16 +1,27 @@
 package org.dallas.smartshelf.view.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import io.github.aakira.napier.Napier
+import org.dallas.smartshelf.util.CameraPreview
+import org.dallas.smartshelf.util.ConsumableEvent
+import org.dallas.smartshelf.util.handleEvent
+import org.dallas.smartshelf.util.rememberOCRScanner
+import org.dallas.smartshelf.view.component.showToast
 import org.dallas.smartshelf.viewmodel.ReceiptScanningViewModel
 
 @Composable
@@ -20,138 +31,81 @@ fun ReceiptScanningScreen(
 ) {
     var isScanning by remember { mutableStateOf(false) }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        verticalArrangement = Arrangement.Top,
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        val lifecycleOwner = LocalLifecycleOwner.current
-        val context = LocalContext.current
-        val cameraProviderFuture =
-            remember { runCatching { ProcessCameraProvider.getInstance(context) }.getOrNull() }
-        val previewView = remember { PreviewView(context) }
-        val selector = remember {
-            CameraSelector.Builder()
-                .requireLensFacing(CameraSelector.LENS_FACING_BACK)
-                .build()
-        }
+        // Create OCR scanner using rememberOCRScanner
+        val ocrScanner = rememberOCRScanner(
+            onTextDetected = { detectedText ->
+                Napier.d("OCR detected text: $detectedText")
+                isScanning = false
+                onAction(ReceiptScanningViewModel.Action.OCRSuccess(detectedText))
+            },
+            onError = { message ->
+                Napier.e("OCR error: $message")
+                onAction(ReceiptScanningViewModel.Action.OCRFailed(message ?: "Unknown error"))
+            }
+        )
 
-        val preview = remember {
-            androidx.camera.core.Preview.Builder()
-                .build()
-        }
-        val imageAnalysis = remember {
-            ImageAnalysis.Builder()
-                .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                .build()
-        }
-        preview.setSurfaceProvider(previewView.surfaceProvider)
-
-        val analyzer = remember {
-            OCRAnalyzer(
-                onDetected = { detectedText: String ->
-                    isScanning = false
-                    cameraProviderFuture?.get()?.unbindAll()
-                    onAction(ReceiptScanningViewModel.Action.OCRSuccess(detectedText))
-                },
-                onNotDetected = { message ->
-                    Log.e("OCRScanningScreen", "onNotDetected: $message")
-                    onAction(ReceiptScanningViewModel.Action.OCRFailed(message ?: "Unknown error"))
-                }
-            )
-        }
-
-        LaunchedEffect(isScanning) {
+        // Control OCR scanner based on isScanning state
+        DisposableEffect(isScanning) {
             if (isScanning) {
-                imageAnalysis.setAnalyzer(
-                    ContextCompat.getMainExecutor(context),
-                    analyzer
-                )
+                ocrScanner.startScanning()
             } else {
-                imageAnalysis.clearAnalyzer()
+                ocrScanner.stopScanning()
+            }
+
+            onDispose {
+                ocrScanner.stopScanning()
             }
         }
 
-        Box(modifier = Modifier.fillMaxSize()) {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = {
-                    enableCamera(
-                        cameraProviderFuture,
-                        lifecycleOwner,
-                        selector,
-                        preview,
-                        imageAnalysis
-                    )
-                    previewView
-                }
-            )
+        // Camera preview
+        CameraPreview(
+            modifier = Modifier.fillMaxSize(),
+            ocrScanner = ocrScanner,
+            isScanning = true // Always show camera preview, but OCR processing is controlled separately
+        )
 
-            Button(
-                onClick = {
-                    isScanning = !isScanning
+        // Helper text
+        Text(
+            text = if (isScanning) "Scanning receipt..." else "Press button to scan receipt",
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(top = 48.dp)
+        )
+
+        // Start/Stop button
+        Button(
+            onClick = {
+                isScanning = !isScanning
+                if (isScanning) {
                     onAction(ReceiptScanningViewModel.Action.StartProcessing)
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)
-            ) {
-                Text("Start Scanning")
-            }
-        }
-
-        DisposeCameraAfterFinish {
-            cameraProviderFuture?.get()?.unbindAll()
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 32.dp)
+        ) {
+            Text(if (isScanning) "Stop Scanning" else "Start Scanning")
         }
     }
-    handleEvent(viewState.consumableEvent, LocalContext.current)
+
+    // Handle events for showing toast messages
+    handleEvent(viewState.consumableEvent)
 }
 
 private fun handleEvent(
-    consumableEvent: ConsumableEvent<ReceiptScanningViewModel.Event>,
-    context: Context
+    consumableEvent: ConsumableEvent<ReceiptScanningViewModel.Event>
 ) {
     consumableEvent.handleEvent { event ->
         when (event) {
             is ReceiptScanningViewModel.Event.OCRFailed -> {
-                Toast.makeText(
-                    context,
-                    "Failed to scan text",
-                    Toast.LENGTH_SHORT
-                ).show()
+                showToast("Failed to scan text")
             }
-        }
-    }
-}
-
-private fun enableCamera(
-    cameraProviderFuture: ListenableFuture<ProcessCameraProvider>?,
-    lifecycleOwner: LifecycleOwner,
-    selector: CameraSelector,
-    preview: androidx.camera.core.Preview,
-    imageAnalysis: ImageAnalysis
-) {
-    try {
-        cameraProviderFuture?.get()?.unbindAll()
-        cameraProviderFuture?.get()?.bindToLifecycle(
-            lifecycleOwner,
-            selector,
-            preview,
-            imageAnalysis
-        )
-    } catch (e: IllegalStateException) {
-        Log.e("CameraScanner", "Error:${e.message}")
-    } catch (e: IllegalArgumentException) {
-        Log.e("CameraScanner", "Error:${e.message}")
-    }
-}
-
-@Composable
-private fun DisposeCameraAfterFinish(action: () -> Unit) {
-    DisposableEffect(Unit) {
-        onDispose {
-            action()
         }
     }
 }

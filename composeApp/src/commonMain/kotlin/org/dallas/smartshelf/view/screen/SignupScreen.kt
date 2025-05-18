@@ -1,6 +1,5 @@
-package com.junevrtech.smartshelf.view.screen
+package org.dallas.smartshelf.view.screen
 
-import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,19 +13,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
-import com.junevrtech.smartshelf.theme.SmartShelfTheme
-import com.junevrtech.smartshelf.theme.dimens
-import com.junevrtech.smartshelf.util.ConsumableEvent
-import com.junevrtech.smartshelf.util.handleEvent
+import org.dallas.smartshelf.theme.dimens
+import org.dallas.smartshelf.util.ConsumableEvent
+import org.dallas.smartshelf.util.handleEvent
 import org.dallas.smartshelf.view.component.dialog.ErrorDialogComponent
 import org.dallas.smartshelf.view.component.InputFieldComponent
 import org.dallas.smartshelf.view.component.LoadingComponent
 import org.dallas.smartshelf.view.component.Spacer16
 import org.dallas.smartshelf.view.component.Spacer8
-import com.junevrtech.smartshelf.viewmodel.SignupViewModel
+import org.dallas.smartshelf.viewmodel.SignupViewModel
 
 @Composable
 fun SignupScreen(
@@ -78,12 +74,11 @@ fun SignupScreen(
     }
     if (viewState.isLoading) LoadingComponent()
     if (viewState.showErrorDialog) ErrorDialogComponent()
-    handleEvent(viewState.consumableEvent, LocalContext.current)
+    handleEvent(viewState.consumableEvent)
 }
 
 private fun handleEvent(
-    consumableEvent: ConsumableEvent<SignupViewModel.Event>,
-    context: Context
+    consumableEvent: ConsumableEvent<SignupViewModel.Event>
 ) {
     consumableEvent.handleEvent { event ->
         when (event) {
@@ -92,15 +87,4 @@ private fun handleEvent(
             is SignupViewModel.Event.Error -> Unit
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun SignupScreenPreview() {
-   SmartShelfTheme {
-       SignupScreen(
-           viewState = SignupViewModel.ViewState(),
-           onAction = {}
-       )
-   }
 }

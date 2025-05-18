@@ -1,20 +1,30 @@
 package org.dallas.smartshelf.di
 
 import cafe.adriel.voyager.navigator.Navigator
+import com.russhwolf.settings.Settings
 import org.dallas.smartshelf.manager.CapturedDataManager
+import org.dallas.smartshelf.manager.JwtAuthManager
 import org.dallas.smartshelf.manager.LocaleManager
 import org.dallas.smartshelf.manager.SharedPreferencesManager
 import org.dallas.smartshelf.manager.SharedPreferencesManagerFactory
 import org.dallas.smartshelf.manager.UserManager
 import org.dallas.smartshelf.repository.AuthenticationRepository
+import org.dallas.smartshelf.repository.EggRepository
+import org.dallas.smartshelf.repository.EggRepositoryImpl
 import org.dallas.smartshelf.repository.ProductRepository
 import org.dallas.smartshelf.repository.ProductRepositoryImpl
+import org.dallas.smartshelf.usecase.GetEggNutritionByTypeUseCase
+import org.dallas.smartshelf.usecase.GetNationalEggPricesUseCase
 import org.dallas.smartshelf.util.BarcodeScannerManager
 import org.dallas.smartshelf.util.HttpClientFactory
+import org.dallas.smartshelf.util.PlatformContext
+import org.dallas.smartshelf.util.PlatformContextFactory
 import org.dallas.smartshelf.viewmodel.BarcodeScanningViewModel
 import org.dallas.smartshelf.viewmodel.CapturedDataViewModel
 import org.dallas.smartshelf.viewmodel.DashboardViewModel
 import org.dallas.smartshelf.viewmodel.DeleteAccountViewModel
+import org.dallas.smartshelf.viewmodel.EggNutritionViewModel
+import org.dallas.smartshelf.viewmodel.EggPricesViewModel
 import org.dallas.smartshelf.viewmodel.ForgotPasswordViewModel
 import org.dallas.smartshelf.viewmodel.HomeViewModel
 import org.dallas.smartshelf.viewmodel.OnboardingViewModel
@@ -27,12 +37,25 @@ import org.koin.core.context.startKoin
 import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
-val domainModule = module {
+val useCaseModule = module {
+    single { GetEggNutritionByTypeUseCase(get()) }
 
+    single { GetNationalEggPricesUseCase(get()) }
+}
+
+val domainModule = module {
+    single<PlatformContext> { PlatformContextFactory.create() }
+    single<EggRepository> {
+        EggRepositoryImpl(
+            httpClient = get(),
+            jwtAuthManager = get(),
+            platformContext = get()
+        )
+    }
 }
 
 val managerModule = module {
-    single { UserManager(get(), get()) }
+//    single { UserManager(get(), get()) }
     single { CapturedDataManager() }
 }
 
@@ -46,6 +69,7 @@ val networkModule = module {
 }
 
 val authModule = module {
+    single { JwtAuthManager(get(), get()) }
     single { AuthenticationRepository(get()) }
 }
 
@@ -64,7 +88,7 @@ val screenModelModule = module {
         CapturedDataViewModel(
             capturedDataManager = get(),
             productRepository = get(),
-            authManager = get(),
+            authRepository = get(),
             navigator = navigator
         )
     }
@@ -72,7 +96,6 @@ val screenModelModule = module {
     factory { (navigator: Navigator) ->
         SignupViewModel(
             navigator = navigator,
-            userManager = get(),
             authRepository = get(),
             sharedPreferencesManager = get()
         )
@@ -140,12 +163,11 @@ val screenModelModule = module {
         )
     }
 
-    // This one doesn't need the navigator
-    factory {
-        StockViewModel(
-            productRepository = get()
-        )
-    }
+    factory { StockViewModel(get()) }
+
+    factory { EggPricesViewModel(get()) }
+
+    factory { EggNutritionViewModel(get()) }
 }
 
 fun initKoin() {
@@ -162,5 +184,6 @@ val appModules = listOf(
     authModule,
     managerModule,
     screenModelModule,
-    utilModule
+    utilModule,
+    useCaseModule
 )

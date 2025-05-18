@@ -1,4 +1,4 @@
-package com.junevrtech.smartshelf.view.screen
+package org.dallas.smartshelf.view.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Divider
@@ -32,7 +29,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,25 +37,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.junevrtech.smartshelf.model.EggNutrition
-import com.junevrtech.smartshelf.model.EggType
-import com.junevrtech.smartshelf.repository.ApiResult
-import com.junevrtech.smartshelf.viewmodel.EggNutritionViewModel
+import org.dallas.smartshelf.model.EggNutrition
+import org.dallas.smartshelf.model.EggType
+import org.dallas.smartshelf.util.ApiResult
+import org.jetbrains.compose.resources.painterResource
+import smartshelf.composeapp.generated.resources.Res
+import smartshelf.composeapp.generated.resources.back_icon
+import smartshelf.composeapp.generated.resources.refresh_icon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EggNutritionScreen(
     onNavigateBack: () -> Unit,
-    viewModel: EggNutritionViewModel = hiltViewModel()
+    nutritionData: ApiResult<List<EggNutrition>>,
+    getEggNutritionByType: (EggType) -> Unit,
 ) {
-    val nutritionData by viewModel.eggNutrition.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var expanded by remember { mutableStateOf(false) }
     var selectedEggType by remember { mutableStateOf(EggType.GRADE_A_LARGE) }
 
     LaunchedEffect(key1 = selectedEggType) {
-        viewModel.getEggNutritionByType(selectedEggType)
+        getEggNutritionByType(selectedEggType)
     }
 
     Scaffold(
@@ -69,15 +67,15 @@ fun EggNutritionScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            painter = painterResource(Res.drawable.back_icon),
                             contentDescription = "Back"
                         )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.getEggNutritionByType(selectedEggType) }) {
+                    IconButton(onClick = { getEggNutritionByType(selectedEggType) }) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
+                            painter = painterResource(Res.drawable.refresh_icon),
                             contentDescription = "Refresh"
                         )
                     }
@@ -116,7 +114,7 @@ fun EggNutritionScreen(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    EggType.values().forEach { eggType ->
+                    EggType.entries.forEach { eggType ->
                         DropdownMenuItem(
                             text = {
                                 Text(eggType.toString().replace("_", " "))

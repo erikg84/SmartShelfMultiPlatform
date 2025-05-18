@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import org.dallas.smartshelf.manager.LocaleManager
 import org.dallas.smartshelf.util.ConsumableEvent
 import org.dallas.smartshelf.view.screen.DeleteAccountScreen
+import org.dallas.smartshelf.view.screen.model.DeleteAccountModelScreen
 
 class SettingsViewModel(
     private val navigator: Navigator,
@@ -76,7 +77,7 @@ class SettingsViewModel(
 
     private fun navigateToDeleteAccountScreen() {
         screenModelScope.launch {
-            navigator.push(DeleteAccountScreen)
+            navigator.push(DeleteAccountModelScreen)
         }
     }
 

@@ -1,6 +1,7 @@
 package org.dallas.smartshelf.model
 
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -10,5 +11,5 @@ data class EggPriceHistory(
     val lowestPrice: Double,
     val highestPrice: Double,
     val priceChange30Days: Double,
-    val lastUpdated: LocalDate
+    val lastUpdated: LocalDateTime
 )

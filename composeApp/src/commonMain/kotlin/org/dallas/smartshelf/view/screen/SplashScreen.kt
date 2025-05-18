@@ -1,4 +1,4 @@
-package com.junevrtech.smartshelf.view.screen
+package org.dallas.smartshelf.view.screen
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -22,15 +22,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.times
-import com.junevrtech.smartshelf.theme.SmartShelfTheme
-import com.junevrtech.smartshelf.theme.dimens
-import com.junevrtech.smartshelf.view.component.app.AppLogo
+import org.dallas.smartshelf.theme.dimens
+import org.dallas.smartshelf.view.component.AppLogo
 import org.dallas.smartshelf.view.component.Spacer24
 import org.dallas.smartshelf.view.component.Spacer32
-import com.junevrtech.smartshelf.viewmodel.SplashViewModel
+import org.dallas.smartshelf.viewmodel.SplashViewModel
 
 
 @Composable
@@ -94,28 +90,22 @@ fun InfiniteProgressBar() {
         ), label = ""
     )
 
-    Box(
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
             .height(MaterialTheme.dimens.dp4)
             .clip(RoundedCornerShape(MaterialTheme.dimens.dp2))
             .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
     ) {
+        val maxWidthDp = maxWidth
+
         Box(
             modifier = Modifier
                 .fillMaxHeight()
                 .fillMaxWidth(fraction = 0.2f)
-                .offset(x = progress * (LocalContext.current.resources.displayMetrics.widthPixels.toFloat() * 0.8f).dp)
+                .offset(x = (progress * maxWidthDp.value * 0.8f).dp)
                 .clip(RoundedCornerShape(MaterialTheme.dimens.dp2))
                 .background(MaterialTheme.colorScheme.surface)
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun SplashScreenPreview() {
-    SmartShelfTheme {
-        SplashScreen{}
     }
 }

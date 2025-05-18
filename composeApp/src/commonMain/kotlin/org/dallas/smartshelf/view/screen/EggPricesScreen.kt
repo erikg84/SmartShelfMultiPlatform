@@ -1,4 +1,4 @@
-package com.junevrtech.smartshelf.view.screen
+package org.dallas.smartshelf.view.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,9 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,33 +24,32 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.junevrtech.smartshelf.model.EggPrice
-import com.junevrtech.smartshelf.model.EggPriceHistory
-import com.junevrtech.smartshelf.repository.ApiResult
-import com.junevrtech.smartshelf.viewmodel.EggPricesViewModel
-import java.math.BigDecimal
-import java.time.format.DateTimeFormatter
+import org.dallas.smartshelf.model.EggPrice
+import org.dallas.smartshelf.model.EggPriceHistory
+import org.dallas.smartshelf.util.ApiResult
+import org.dallas.smartshelf.util.formatDate
+import org.jetbrains.compose.resources.painterResource
+import smartshelf.composeapp.generated.resources.Res
+import smartshelf.composeapp.generated.resources.back_icon
+import smartshelf.composeapp.generated.resources.refresh_icon
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EggPricesScreen(
     onNavigateBack: () -> Unit,
-    viewModel: EggPricesViewModel = hiltViewModel()
+    eggPrices: ApiResult<EggPriceHistory>,
+    loadNationalEggPrices: () -> Unit
 ) {
-    val eggPrices by viewModel.eggPrices.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(key1 = Unit) {
-        viewModel.loadNationalEggPrices()
+        loadNationalEggPrices()
     }
 
     Scaffold(
@@ -63,15 +59,15 @@ fun EggPricesScreen(
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            painter = painterResource(Res.drawable.back_icon),
                             contentDescription = "Back"
                         )
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.loadNationalEggPrices() }) {
+                    IconButton(onClick = { loadNationalEggPrices() }) {
                         Icon(
-                            imageVector = Icons.Default.Refresh,
+                            painter = painterResource(Res.drawable.refresh_icon),
                             contentDescription = "Refresh"
                         )
                     }
@@ -180,7 +176,7 @@ fun EggPriceSummary(eggPriceHistory: EggPriceHistory) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            val priceChangeColor = if (eggPriceHistory.priceChange30Days >= BigDecimal.ZERO) {
+            val priceChangeColor = if (eggPriceHistory.priceChange30Days >= 0.0) {
                 Color(0xFF4CAF50) // Green
             } else {
                 Color(0xFFF44336) // Red
@@ -192,7 +188,7 @@ fun EggPriceSummary(eggPriceHistory: EggPriceHistory) {
             )
 
             Text(
-                text = "Last Updated: ${eggPriceHistory.lastUpdated.format(DateTimeFormatter.ISO_DATE)}",
+                text = "Last Updated: ${formatDate(eggPriceHistory.lastUpdated)}",
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(top = 4.dp)
             )
@@ -201,7 +197,7 @@ fun EggPriceSummary(eggPriceHistory: EggPriceHistory) {
 }
 
 @Composable
-fun PriceStat(label: String, price: BigDecimal) {
+fun PriceStat(label: String, price: Double) {
     Column {
         Text(
             text = label,
@@ -234,7 +230,7 @@ fun EggPriceItem(eggPrice: EggPrice) {
                     style = MaterialTheme.typography.titleSmall
                 )
                 Text(
-                    text = eggPrice.date.format(DateTimeFormatter.ISO_DATE),
+                    text = formatDate(eggPrice.date),
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(

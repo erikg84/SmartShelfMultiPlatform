@@ -14,9 +14,9 @@ import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import org.dallas.smartshelf.manager.CapturedDataManager
-import org.dallas.smartshelf.manager.FirebaseAuthManager
 import org.dallas.smartshelf.model.Product
 import org.dallas.smartshelf.model.ProductCategory
+import org.dallas.smartshelf.repository.AuthenticationRepository
 import org.dallas.smartshelf.repository.ProductRepository
 import org.dallas.smartshelf.util.ReceiptItem
 import org.dallas.smartshelf.util.ReceiptParser
@@ -25,7 +25,7 @@ class CapturedDataViewModel(
     private val navigator: Navigator,
     private val capturedDataManager: CapturedDataManager,
     private val productRepository: ProductRepository,
-    private val authManager: FirebaseAuthManager
+    private val authRepository: AuthenticationRepository
 ) : ScreenModel {
     private val statefulStore: ModelStore<ViewState> = StatefulStore(ViewState(), screenModelScope)
     val viewState: StateFlow<ViewState> get() = statefulStore.state
@@ -107,7 +107,7 @@ class CapturedDataViewModel(
         screenModelScope.launch {
             statefulStore.process { it.copy(isLoading = true) }
 
-            val currentUser = authManager.getCurrentUser()
+            val currentUser = authRepository.getCurrentUser()
             if (currentUser == null) {
                 statefulStore.process { oldState ->
                     oldState.copy(

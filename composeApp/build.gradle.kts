@@ -40,14 +40,13 @@ kotlin {
             implementation(libs.ktor.client.android)
             implementation(libs.sqldelight.android)
             implementation(libs.androidx.material)
-            implementation(project.dependencies.platform(libs.firebase.bom))
-            implementation(libs.firebase.auth.android)
             implementation(libs.mlkit.barcode)
             implementation(libs.camerax.core)
             implementation(libs.camerax.camera2)
             implementation(libs.camerax.lifecycle)
             implementation(libs.camerax.view)
             implementation(libs.androidx.security.crypto)
+            implementation(libs.play.services.mlkit.text.recognition)
         }
 
         iosMain.dependencies {
@@ -80,9 +79,6 @@ kotlin {
             implementation(libs.bundles.voyager)
             implementation(libs.napier)
             implementation(libs.kamel)
-            implementation(libs.firebase.common)
-            implementation(libs.firebase.auth)
-            implementation(libs.firebase.firestore)
             implementation(libs.ui.backhandler)
         }
 

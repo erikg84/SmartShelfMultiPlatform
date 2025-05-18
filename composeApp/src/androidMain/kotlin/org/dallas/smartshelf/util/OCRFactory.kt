@@ -9,17 +9,44 @@ import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlin.math.abs
 
-class OCRAnalyzer(
+actual object OCRFactory {
+    actual fun createOCRAnalyzer(
+        onDetected: (String) -> Unit,
+        onNotDetected: (String?) -> Unit
+    ): OCRProcessor = AndroidOCRAnalyzer(onDetected, onNotDetected)
+}
+
+class AndroidOCRAnalyzer(
     private val onDetected: (String) -> Unit,
     private val onNotDetected: (String?) -> Unit
-) : ImageAnalysis.Analyzer {
+) : OCRProcessor, ImageAnalysis.Analyzer {
+
     companion object {
         private const val TAG = "OCR"
         private const val Y_THRESHOLD = 8f
     }
 
+    private var isProcessing = false
+
+    override fun processImage(
+        onTextDetected: (String) -> Unit,
+        onTextNotDetected: (String?) -> Unit
+    ) {
+        isProcessing = true
+        // The actual processing happens in analyze() when called by CameraX
+    }
+
+    override fun stopProcessing() {
+        isProcessing = false
+    }
+
     @SuppressLint("UnsafeOptInUsageError")
     override fun analyze(imageProxy: ImageProxy) {
+        if (!isProcessing) {
+            imageProxy.close()
+            return
+        }
+
         val mediaImage = imageProxy.image ?: return
         val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
         val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
@@ -76,4 +103,8 @@ class OCRAnalyzer(
         val y: Float,
         val x: Float
     )
+
+    fun getAnalyzer(): ImageAnalysis.Analyzer {
+        return this
+    }
 }
