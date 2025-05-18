@@ -1,30 +1,30 @@
 package org.dallas.smartshelf.repository
 
-import org.dallas.smartshelf.manager.FirebaseAuthManager
+import org.dallas.smartshelf.manager.JwtAuthManager
 import org.dallas.smartshelf.model.User
 
 class AuthenticationRepository(
-    private val firebaseAuthManager: FirebaseAuthManager
+    private val jwtAuthManager: JwtAuthManager
 ) {
     /**
-     * Login with email and password
+     * Login with username and password
      * @return Result containing User on success or Exception on failure
      */
-    suspend fun login(email: String, password: String): Result<User> {
+    suspend fun login(username: String, password: String): Result<User> {
         return try {
-            firebaseAuthManager.signIn(email, password)
+            jwtAuthManager.signIn(username, password)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
     /**
-     * Register a new user with email and password
+     * Register a new user with username, email and password
      * @return Result containing User on success or Exception on failure
      */
-    suspend fun register(email: String, password: String): Result<User> {
+    suspend fun register(username: String, email: String, password: String): Result<User> {
         return try {
-            firebaseAuthManager.signUp(email, password)
+            jwtAuthManager.signUp(username, email, password)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -36,7 +36,7 @@ class AuthenticationRepository(
      */
     suspend fun sendPasswordReset(email: String): Result<Unit> {
         return try {
-            firebaseAuthManager.sendPasswordReset(email)
+            jwtAuthManager.sendPasswordReset(email)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -48,7 +48,7 @@ class AuthenticationRepository(
      */
     suspend fun deleteAccount(): Result<Unit> {
         return try {
-            firebaseAuthManager.deleteAccount()
+            jwtAuthManager.deleteAccount()
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -58,7 +58,7 @@ class AuthenticationRepository(
      * Sign out the current user
      */
     suspend fun signOut() {
-        firebaseAuthManager.signOut()
+        jwtAuthManager.signOut()
     }
 
     /**
@@ -66,7 +66,7 @@ class AuthenticationRepository(
      * @return true if user is signed in, false otherwise
      */
     suspend fun isUserSignedIn(): Boolean {
-        return firebaseAuthManager.isUserSignedIn()
+        return jwtAuthManager.isUserSignedIn()
     }
 
     /**
@@ -74,6 +74,6 @@ class AuthenticationRepository(
      * @return User object or null if no user is signed in
      */
     suspend fun getCurrentUser(): User? {
-        return firebaseAuthManager.getCurrentUser()
+        return jwtAuthManager.getCurrentUser()
     }
 }

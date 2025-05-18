@@ -1,69 +1,141 @@
 package org.dallas.smartshelf.view.screen
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import org.dallas.smartshelf.Platform
-import org.dallas.smartshelf.getPlatform
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import org.dallas.smartshelf.theme.dimens
+import org.dallas.smartshelf.util.ConsumableEvent
+import org.dallas.smartshelf.util.handleEvent
+import org.dallas.smartshelf.view.component.AppLogo
+import org.dallas.smartshelf.view.component.dialog.ErrorDialogComponent
+import org.dallas.smartshelf.view.component.InputFieldComponent
+import org.dallas.smartshelf.view.component.LoadingComponent
+import org.dallas.smartshelf.view.component.Spacer16
+import org.dallas.smartshelf.view.component.Spacer32
+import org.dallas.smartshelf.view.component.Spacer8
+import org.dallas.smartshelf.view.component.WeightedSpacer
+import org.dallas.smartshelf.viewmodel.LoginViewModel
 
-object LoginScreen : Screen {
+@Composable
+fun LoginScreen(
+    viewState: LoginViewModel.ViewState,
+    onAction: (LoginViewModel.Action) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .background(MaterialTheme.colorScheme.background)
+            .fillMaxSize()
+            .padding(MaterialTheme.dimens.dp16),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Spacer32()
 
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        val platform = getPlatform()
+        AppLogo()
 
-        Box(
+        WeightedSpacer()
+
+        InputFieldComponent(
+            maskEmail = viewState.rememberMe,
+            initialValue = viewState.email,
+            imeAction = ImeAction.Next,
+            onValueChange = {
+                onAction(LoginViewModel.Action.UpdateEmail(it))
+            },
+            label = "Email",
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                .fillMaxWidth()
+        )
+
+        Spacer8()
+
+        InputFieldComponent(
+            onImeAction = {
+                onAction(LoginViewModel.Action.Login)
+            },
+            onValueChange = {
+                onAction(LoginViewModel.Action.UpdatePassword(it))
+            },
+            label = "Password",
+            modifier = Modifier
+                .fillMaxWidth(),
+            isPassword = true
+        )
+
+        Spacer16()
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Home Screen",
-                    style = MaterialTheme.typography.headlineMedium
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Running on ${getPlatformName(platform)}",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Button(
-                    onClick = { navigator.push(InventoryScreen) }
-                ) {
-                    Text("Go to Inventory")
+            Checkbox(
+                enabled = viewState.isFormValid,
+                checked = viewState.rememberMe,
+                onCheckedChange = { isChecked ->
+                    onAction(LoginViewModel.Action.ToggleRememberMe(isChecked))
                 }
+            )
+            Text(text = "Remember Me")
+        }
+
+        Spacer16()
+
+        Button(
+            enabled = viewState.isFormValid,
+            onClick = {
+                onAction(LoginViewModel.Action.Login)
+            },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Submit")
+        }
+
+        TextButton(onClick = {
+            onAction(LoginViewModel.Action.ForgotPassword)
+        }) {
+            Text(text = "Forgot Password?", color = MaterialTheme.colorScheme.primary)
+        }
+
+        Spacer8()
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(text = "Don't have an account?", color = MaterialTheme.colorScheme.primary)
+            TextButton(onClick = { onAction(LoginViewModel.Action.NavigateToRegister) }) {
+                Text(
+                    "Sign Up",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }
 
-    private fun getPlatformName(platform: Platform): String {
-        return when (platform) {
-            is Platform.Android -> "Android"
-            is Platform.Ios -> "iOS"
-            is Platform.Desktop -> "Desktop"
-            is Platform.Web -> "Web"
+    if (viewState.isLoading) LoadingComponent()
+    if (viewState.showErrorDialog) ErrorDialogComponent()
+
+    handleEvent(consumableEvent = viewState.consumableEvent)
+}
+
+private fun handleEvent(consumableEvent: ConsumableEvent<LoginViewModel.Event>) {
+    consumableEvent.handleEvent { event ->
+        when (event) {
+            is LoginViewModel.Event.Error -> Unit
+            is LoginViewModel.Event.LoginSuccess -> Unit
         }
     }
 }

@@ -9,6 +9,7 @@ androidx-material = "1.12.0"
 composeHotReload = "1.0.0-alpha09"
 composeMultiplatform = "1.8.0"
 navigation = "2.7.0-alpha07"
+securityCrypto = "1.1.0-alpha07"
 viewmodel = "2.8.0"
 firebase-bom = "32.7.2"
 firebase-auth = "1.9.0"
@@ -30,12 +31,14 @@ napier = "2.7.1"
 kamel = "0.9.3"
 
 [libraries]
+androidx-security-crypto = { module = "androidx.security:security-crypto", version.ref = "securityCrypto" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 androidx-material = { group = "com.google.android.material", name = "material", version.ref = "androidx-material" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-lifecycle-viewmodel = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtimeCompose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation" }
+ui-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler" }
 viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "viewmodel" }
 koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
 koin-compose = { module = "io.insert-koin:koin-compose", version.ref = "koinCompose" }

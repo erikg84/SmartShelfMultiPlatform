@@ -1,4 +1,4 @@
-package org.dallas.smartshelf.view.screen
+package org.dallas.smartshelf.view.screen.model
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,7 +13,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 
-object InventoryScreen : Screen {
+object InventoryModelScreen : Screen {
 
     @Composable
     override fun Content() {

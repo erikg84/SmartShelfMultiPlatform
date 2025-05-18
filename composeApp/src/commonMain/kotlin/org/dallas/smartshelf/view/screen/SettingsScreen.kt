@@ -1,69 +1,145 @@
-package org.dallas.smartshelf.view.screen
+package com.junevrtech.smartshelf.view.screen
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
-import org.dallas.smartshelf.Platform
-import org.dallas.smartshelf.getPlatform
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.tooling.preview.Preview
+import com.junevrtech.smartshelf.theme.SmartShelfTheme
+import com.junevrtech.smartshelf.theme.dimens
+import com.junevrtech.smartshelf.viewmodel.SettingsViewModel
 
-object SettingsScreen : Screen {
+@Composable
+fun SettingsScreen(
+    viewState: SettingsViewModel.ViewState,
+    onAction: (action: SettingsViewModel.Action) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .padding(MaterialTheme.dimens.dp16),
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.Top
+    ) {
+        SettingsItem(
+            title = "Notifications",
+            onClick = { onAction(SettingsViewModel.Action.ManageNotifications) }
+        )
 
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        val platform = getPlatform()
+        HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.dp8))
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Home Screen",
-                    style = MaterialTheme.typography.headlineMedium
-                )
+        ThemeToggleItem(
+            isDarkTheme = viewState.isDarkTheme,
+            onToggleTheme = { onAction(SettingsViewModel.Action.ToggleTheme) }
+        )
 
-                Spacer(modifier = Modifier.height(8.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.dp8))
 
-                Text(
-                    text = "Running on ${getPlatformName(platform)}",
-                    style = MaterialTheme.typography.bodyLarge
-                )
+        LanguageToggleItem(
+            isLanguageEnglish = viewState.isLanguageEnglish,
+            onToggleLanguage = { onAction(SettingsViewModel.Action.ToggleLanguage) }
+        )
 
-                Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.dp8))
 
-                Button(
-                    onClick = { navigator.push(InventoryScreen) }
-                ) {
-                    Text("Go to Inventory")
-                }
-            }
-        }
+        SettingsItem(
+            title = "Privacy Policy",
+            onClick = { onAction(SettingsViewModel.Action.ShowPrivacyPolicy) }
+        )
+
+        HorizontalDivider(modifier = Modifier.padding(vertical = MaterialTheme.dimens.dp8))
+
+        SettingsItem(
+            title = "Delete Account",
+            onClick = { onAction(SettingsViewModel.Action.DeleteAccount) }
+        )
     }
+}
 
-    private fun getPlatformName(platform: Platform): String {
-        return when (platform) {
-            is Platform.Android -> "Android"
-            is Platform.Ios -> "iOS"
-            is Platform.Desktop -> "Desktop"
-            is Platform.Web -> "Web"
-        }
+@Composable
+private fun SettingsItem(
+    title: String,
+    onClick: () -> Unit
+) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(PaddingValues(vertical = MaterialTheme.dimens.dp16)),
+        color = MaterialTheme.colorScheme.onPrimaryContainer
+    )
+}
+
+@Composable
+private fun ThemeToggleItem(
+    isDarkTheme: Boolean,
+    onToggleTheme: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggleTheme)
+            .padding(PaddingValues(vertical = MaterialTheme.dimens.dp16)),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = "Dark Theme",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        Switch(
+            checked = isDarkTheme,
+            onCheckedChange = { onToggleTheme() },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.onTertiary
+            )
+        )
+    }
+}
+
+@Composable
+private fun LanguageToggleItem(
+    isLanguageEnglish: Boolean,
+    onToggleLanguage: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onToggleLanguage)
+            .padding(PaddingValues(vertical = MaterialTheme.dimens.dp16)),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = if (isLanguageEnglish) "Language: English" else "Language: Spanish",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onPrimaryContainer
+        )
+        Switch(
+            checked = isLanguageEnglish,
+            onCheckedChange = { onToggleLanguage() },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.onTertiary
+            )
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun SettingsScreenPreview() {
+    SmartShelfTheme {
+        SettingsScreen(
+            viewState = SettingsViewModel.ViewState(),
+            onAction = {}
+        )
     }
 }

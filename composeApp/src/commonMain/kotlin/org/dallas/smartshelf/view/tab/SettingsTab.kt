@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import org.dallas.smartshelf.util.AppIcons
-import org.dallas.smartshelf.view.screen.SettingsScreen
+import org.dallas.smartshelf.view.screen.model.SettingsModelScreen
 
 object SettingsTab : Tab {
     override val options: TabOptions
@@ -20,6 +20,6 @@ object SettingsTab : Tab {
 
     @Composable
     override fun Content() {
-        SettingsScreen.Content()
+        SettingsModelScreen.Content()
     }
 }

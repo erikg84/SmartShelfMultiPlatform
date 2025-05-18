@@ -16,7 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.navigator.tab.TabNavigator
-import org.dallas.smartshelf.view.screen.LoginScreen
+import org.dallas.smartshelf.view.screen.model.LoginModelScreen
 import org.dallas.smartshelf.view.tab.CalendarTab
 import org.dallas.smartshelf.view.tab.HistoryTab
 import org.dallas.smartshelf.view.tab.InventoryTab
@@ -69,7 +69,7 @@ fun AppDrawerContent(
 
         DrawerItem("Logout") {
             // For logout, we need to use the root navigator
-            rootNavigator.replaceAll(LoginScreen)
+            rootNavigator.replaceAll(LoginModelScreen)
             closeDrawer()
         }
     }

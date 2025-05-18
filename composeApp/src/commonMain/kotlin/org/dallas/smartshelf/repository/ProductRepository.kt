@@ -1,220 +1,185 @@
 package org.dallas.smartshelf.repository
 
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.request.*
+import io.ktor.http.*
 import kotlinx.coroutines.flow.Flow
-import org.dallas.smartshelf.model.Product
-import dev.gitlive.firebase.firestore.FirebaseFirestore
-import dev.gitlive.firebase.firestore.where
-import io.github.aakira.napier.Napier
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import org.dallas.smartshelf.manager.FirebaseAuthManager
+import kotlinx.serialization.Serializable
+import org.dallas.smartshelf.manager.JwtAuthManager
+import org.dallas.smartshelf.model.Product
 import org.dallas.smartshelf.model.ProductCategory
+import org.dallas.smartshelf.util.PlatformContext
+import kotlin.random.Random
 
 interface ProductRepository {
     suspend fun saveProduct(product: Product): Result<Product>
-    suspend fun getProducts(): Flow<List<Product>>
+    suspend fun getProducts(): Result<List<Product>>
     suspend fun updateProduct(product: Product): Result<Product>
     suspend fun deleteProduct(productId: String): Result<Unit>
     suspend fun getProductByBarcode(barcode: String): Result<Product?>
+
+    fun productsFlow(): Flow<List<Product>>
 }
 
 class ProductRepositoryImpl(
-    private val firestore: FirebaseFirestore,
-    private val authManager: FirebaseAuthManager
-) : ProductRepository {
+    httpClient: HttpClient,
+    jwtAuthManager: JwtAuthManager,
+    platformContext: PlatformContext
+) : BaseRepository(httpClient, jwtAuthManager, platformContext), ProductRepository {
 
-    private val productsCollection get() = firestore.collection("products")
+    private val productsFlow = MutableStateFlow<List<Product>>(emptyList())
+
+    @Serializable
+    data class ProductDto(
+        val id: String = "product-${Random.nextInt(1000, 9999)}",
+        val barcode: String?,
+        val name: String,
+        val quantity: Int = 0,
+        val purchaseDate: String,
+        val expiryDate: String?,
+        val category: String,
+        val lastModified: String = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).toString(),
+        val userId: String = ""
+    )
+
+    private fun Product.toDto(): ProductDto = ProductDto(
+        id = this.id,
+        barcode = this.barcode,
+        name = this.name,
+        quantity = this.quantity,
+        purchaseDate = this.purchaseDate.toString(),
+        expiryDate = this.expiryDate?.toString(),
+        category = this.category.name,
+        lastModified = this.lastModified.toString(),
+        userId = this.userId
+    )
+
+    private fun ProductDto.toModel(): Product = Product(
+        id = this.id,
+        barcode = this.barcode,
+        name = this.name,
+        quantity = this.quantity,
+        purchaseDate = LocalDateTime.parse(this.purchaseDate),
+        expiryDate = this.expiryDate?.let { LocalDateTime.parse(it) },
+        category = try {
+            ProductCategory.valueOf(this.category)
+        } catch (e: Exception) {
+            ProductCategory.OTHER
+        },
+        lastModified = LocalDateTime.parse(this.lastModified),
+        userId = this.userId
+    )
 
     override suspend fun saveProduct(product: Product): Result<Product> {
         return try {
-            val currentUser = authManager.getCurrentUser()
-                ?: return Result.failure(Exception("User not authenticated"))
-
-            // Ensure the product has the current user ID
-            val productToSave = if (product.userId == currentUser.userId) {
-                product
-            } else {
-                product.copy(userId = currentUser.userId)
+            val response = httpClient.post("$baseUrl/products") {
+                contentType(ContentType.Application.Json)
+                authorizedRequest()
+                setBody(product.toDto())
             }
 
-            // Update lastModified to current time
-            val updatedProduct = productToSave.copy(
-                lastModified = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            )
+            handleApiResponse(response) {
+                val savedProduct = it.body<ProductDto>().toModel()
 
-            // Convert product to map
-            val productData = mapOf(
-                "id" to updatedProduct.id,
-                "barcode" to updatedProduct.barcode,
-                "name" to updatedProduct.name,
-                "quantity" to updatedProduct.quantity,
-                "purchaseDate" to updatedProduct.purchaseDate.toString(),
-                "expiryDate" to updatedProduct.expiryDate?.toString(),
-                "category" to updatedProduct.category.name,
-                "lastModified" to updatedProduct.lastModified.toString(),
-                "userId" to updatedProduct.userId
-            )
+                // Update the flow with the new product
+                val currentProducts = productsFlow.value.toMutableList()
+                currentProducts.add(savedProduct)
+                productsFlow.value = currentProducts
 
-            productsCollection.document(updatedProduct.id).set(productData)
-
-            Napier.d(tag = "ProductRepository", message = "Product saved successfully: ${updatedProduct.id}")
-            Result.success(updatedProduct)
+                savedProduct
+            }
         } catch (e: Exception) {
-            Napier.e(tag = "ProductRepository", message = "Error saving product: ${e.message}")
             Result.failure(e)
         }
     }
 
-    override suspend fun getProducts(): Flow<List<Product>> {
-        val currentUser = authManager.getCurrentUser()
-            ?: throw Exception("User not authenticated")
-
-        return productsCollection
-            .where("userId", "==", currentUser.userId)
-            .snapshots
-            .map { snapshot ->
-                snapshot.documents.mapNotNull { document ->
-                    try {
-                        val data = document.data<Map<String, Any>>()
-
-                        // Parse dates
-                        val purchaseDateStr = data["purchaseDate"] as? String
-                            ?: return@mapNotNull null
-                        val expiryDateStr = data["expiryDate"] as? String
-                        val lastModifiedStr = data["lastModified"] as? String
-                            ?: return@mapNotNull null
-
-                        Product(
-                            id = data["id"] as? String ?: return@mapNotNull null,
-                            barcode = data["barcode"] as? String,
-                            name = data["name"] as? String ?: return@mapNotNull null,
-                            quantity = (data["quantity"] as? Number)?.toInt() ?: 0,
-                            purchaseDate = LocalDateTime.parse(purchaseDateStr),
-                            expiryDate = expiryDateStr?.let { LocalDateTime.parse(it) },
-                            category = ProductCategory.valueOf(
-                                (data["category"] as? String) ?: ProductCategory.OTHER.name
-                            ),
-                            lastModified = LocalDateTime.parse(lastModifiedStr),
-                            userId = data["userId"] as? String ?: return@mapNotNull null
-                        )
-                    } catch (e: Exception) {
-                        Napier.e(tag = "ProductRepository", message = "Error parsing product: ${e.message}")
-                        null
-                    }
-                }
+    override suspend fun getProducts(): Result<List<Product>> {
+        return try {
+            val response = httpClient.get("$baseUrl/products") {
+                authorizedRequest()
             }
+
+            handleApiResponse(response) {
+                val products = it.body<List<ProductDto>>().map { dto -> dto.toModel() }
+
+                // Update the flow
+                productsFlow.value = products
+
+                products
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     override suspend fun updateProduct(product: Product): Result<Product> {
         return try {
-            val currentUser = authManager.getCurrentUser()
-                ?: return Result.failure(Exception("User not authenticated"))
-
-            // Ensure the product belongs to the current user
-            if (product.userId != currentUser.userId) {
-                return Result.failure(Exception("Cannot update a product that doesn't belong to the current user"))
+            val response = httpClient.put("$baseUrl/products/${product.id}") {
+                contentType(ContentType.Application.Json)
+                authorizedRequest()
+                setBody(product.toDto())
             }
 
-            // Update lastModified to current time
-            val updatedProduct = product.copy(
-                lastModified = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            )
+            handleApiResponse(response) {
+                val updatedProduct = it.body<ProductDto>().toModel()
 
-            // Convert product to map
-            val productData = mapOf(
-                "id" to updatedProduct.id,
-                "barcode" to updatedProduct.barcode,
-                "name" to updatedProduct.name,
-                "quantity" to updatedProduct.quantity,
-                "purchaseDate" to updatedProduct.purchaseDate.toString(),
-                "expiryDate" to updatedProduct.expiryDate?.toString(),
-                "category" to updatedProduct.category.name,
-                "lastModified" to updatedProduct.lastModified.toString(),
-                "userId" to updatedProduct.userId
-            )
+                // Update the flow
+                productsFlow.update { products ->
+                    products.map {
+                        if (it.id == updatedProduct.id) updatedProduct else it
+                    }
+                }
 
-            productsCollection.document(updatedProduct.id).update(productData)
-
-            Napier.d(tag = "ProductRepository", message = "Product updated successfully: ${updatedProduct.id}")
-            Result.success(updatedProduct)
+                updatedProduct
+            }
         } catch (e: Exception) {
-            Napier.e(tag = "ProductRepository", message = "Error updating product: ${e.message}")
             Result.failure(e)
         }
     }
 
     override suspend fun deleteProduct(productId: String): Result<Unit> {
         return try {
-            val currentUser = authManager.getCurrentUser()
-                ?: return Result.failure(Exception("User not authenticated"))
-
-            // Verify the product belongs to the current user
-            val productDoc = productsCollection.document(productId).get()
-            val productData = productDoc.data<Map<String, Any>>()
-            val productUserId = productData["userId"] as? String
-
-            if (productUserId != currentUser.userId) {
-                return Result.failure(Exception("Cannot delete a product that doesn't belong to the current user"))
+            val response = httpClient.delete("$baseUrl/products/$productId") {
+                authorizedRequest()
             }
 
-            productsCollection.document(productId).delete()
+            handleApiResponse(response) {
+                // Update the flow
+                productsFlow.update { products ->
+                    products.filter { it.id != productId }
+                }
 
-            Napier.d(tag = "ProductRepository", message = "Product deleted successfully: $productId")
-            Result.success(Unit)
+                Unit
+            }
         } catch (e: Exception) {
-            Napier.e(tag = "ProductRepository", message = "Error deleting product: ${e.message}")
             Result.failure(e)
         }
     }
 
     override suspend fun getProductByBarcode(barcode: String): Result<Product?> {
         return try {
-            val currentUser = authManager.getCurrentUser()
-                ?: return Result.failure(Exception("User not authenticated"))
-
-            val snapshot = productsCollection
-                .where("userId", "==", currentUser.userId)
-                .where("barcode", "==", barcode)
-                .get()
-
-            val product = snapshot.documents.firstOrNull()?.let { document ->
-                try {
-                    val data = document.data<Map<String, Any>>()
-
-                    // Parse dates
-                    val purchaseDateStr = data["purchaseDate"] as? String
-                        ?: return@let null
-                    val expiryDateStr = data["expiryDate"] as? String
-                    val lastModifiedStr = data["lastModified"] as? String
-                        ?: return@let null
-
-                    Product(
-                        id = data["id"] as? String ?: return@let null,
-                        barcode = data["barcode"] as? String,
-                        name = data["name"] as? String ?: return@let null,
-                        quantity = (data["quantity"] as? Number)?.toInt() ?: 0,
-                        purchaseDate = LocalDateTime.parse(purchaseDateStr),
-                        expiryDate = expiryDateStr?.let { LocalDateTime.parse(it) },
-                        category = ProductCategory.valueOf(
-                            (data["category"] as? String) ?: ProductCategory.OTHER.name
-                        ),
-                        lastModified = LocalDateTime.parse(lastModifiedStr),
-                        userId = data["userId"] as? String ?: return@let null
-                    )
-                } catch (e: Exception) {
-                    Napier.e(tag = "ProductRepository", message = "Error parsing product: ${e.message}")
-                    null
-                }
+            val response = httpClient.get("$baseUrl/products/barcode/$barcode") {
+                authorizedRequest()
             }
 
-            Napier.d(tag = "ProductRepository", message = "Product by barcode query successful: $barcode")
-            Result.success(product)
+            if (response.status == HttpStatusCode.NotFound) {
+                return Result.success(null)
+            }
+
+            handleApiResponse(response) {
+                it.body<ProductDto>().toModel()
+            }
         } catch (e: Exception) {
-            Napier.e(tag = "ProductRepository", message = "Error getting product by barcode: ${e.message}")
             Result.failure(e)
         }
     }
+
+    override fun productsFlow(): Flow<List<Product>> = productsFlow
 }

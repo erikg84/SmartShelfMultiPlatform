@@ -47,6 +47,7 @@ kotlin {
             implementation(libs.camerax.camera2)
             implementation(libs.camerax.lifecycle)
             implementation(libs.camerax.view)
+            implementation(libs.androidx.security.crypto)
         }
 
         iosMain.dependencies {
@@ -82,6 +83,7 @@ kotlin {
             implementation(libs.firebase.common)
             implementation(libs.firebase.auth)
             implementation(libs.firebase.firestore)
+            implementation(libs.ui.backhandler)
         }
 
         commonTest.dependencies {

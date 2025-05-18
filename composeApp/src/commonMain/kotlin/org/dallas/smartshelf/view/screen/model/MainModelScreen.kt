@@ -1,4 +1,4 @@
-package org.dallas.smartshelf.view.screen
+package org.dallas.smartshelf.view.screen.model
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding

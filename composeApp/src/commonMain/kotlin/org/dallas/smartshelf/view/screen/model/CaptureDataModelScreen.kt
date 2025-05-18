@@ -1,4 +1,4 @@
-package org.dallas.smartshelf.view.screen
+package org.dallas.smartshelf.view.screen.model
 
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
@@ -12,7 +12,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import org.dallas.smartshelf.viewmodel.CapturedDataViewModel
 import org.koin.core.parameter.parametersOf
 
-object CaptureDataScreen : Screen {
+object CaptureDataModelScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow

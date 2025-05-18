@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import org.dallas.smartshelf.util.AppIcons
-import org.dallas.smartshelf.view.screen.HistoryScreen
+import org.dallas.smartshelf.view.screen.model.HistoryModelScreen
 
 object HistoryTab : Tab {
     override val options: TabOptions
@@ -20,6 +20,6 @@ object HistoryTab : Tab {
 
     @Composable
     override fun Content() {
-        HistoryScreen.Content()
+        HistoryModelScreen.Content()
     }
 }
